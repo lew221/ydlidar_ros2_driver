@@ -114,6 +114,11 @@ int main(int argc, char *argv[]) {
   bool invalid_range_is_inf = node->declare_parameter("invalid_range_is_inf", false);
   node->get_parameter("invalid_range_is_inf", invalid_range_is_inf);
 
+  float range_default_val = 0;
+  if(invalid_range_is_inf)
+  {
+    range_default_val = std::numeric_limits<float>::infinity();
+  }
 
   bool ret = laser.initialize();
   if (ret) {
@@ -167,11 +172,11 @@ int main(int argc, char *argv[]) {
         scan_msg->range_max = scan.config.max_range;
         
         int size = (scan.config.max_angle - scan.config.min_angle)/ scan.config.angle_increment + 1;
-        scan_msg->ranges.resize(size);
+        scan_msg->ranges.resize(size, range_default_val);
         scan_msg->intensities.resize(size);
         for(size_t i=0; i < scan.points.size(); i++) {
           int index = std::ceil((scan.points[i].angle - scan.config.min_angle)/scan.config.angle_increment);
-          if(index >=0 && index < size) {
+          if(index >=0 && index < size && scan.points[i].range != 0.0) {
             scan_msg->ranges[index] = scan.points[i].range;
             scan_msg->intensities[index] = scan.points[i].intensity;
           }
